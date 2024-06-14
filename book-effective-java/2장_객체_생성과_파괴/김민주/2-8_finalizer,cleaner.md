@@ -30,39 +30,8 @@
   - 성능 저하를 감당할 수 있고 네이티브 피어가 심각한 자원을 가지고 있지 않을 때에만 사용한다.
   - 네이티브 피어가 사용하는 자원을 즉시 회수해야할 때는 `close`를 사용한다.
 
-- cleaner를 안정망으로 사용하는 `AutoCloseAble` 클래스
-
-```java
-public class Room implements AutoCloseable {
-  private static final Cleaner cleaner = Cleaner.create();
-
-  // 청소가 필요한 자원
-  // State 클래스에서 Room을 참조하면 순환참조가 생겨서 가비지 컬렉터가 Room 인스턴스를 회수하지 않는다 !!!!!
-  private static class State implements Runnable {
-    int numJunkPiles; // Room 안의 쓰레기 수
-
-    State(int numJunkPiles) {
-      this.numJunkPiles = numJunkPiles;
-    }
-
-    // close 메서드나 cleaner가 호출하는 메서드
-    @Override
-    public void run() {
-      numJunkPiles = 0;
-    }
-  }
-
-  // 방의 상태, cleanable과 공유
-  private final State state;
-  // cleanable 객체, 수거 대상이 되면 방을 청소
-  private final Cleaner.Cleanable cleanable;
-
-  public Room(int numJunkPiles) {
-    state = new State(numJunkPiles);
-    cleanable = cleaner.register(this, state);
-  }
-
-  @Override
-
-}
-```
+- cleaner를 안전망으로 사용
+  - 중첩 클래스를 사용하여 cleaner가 청소할 때 수거할 자원들을 담는다.
+  - **중첩 클래스에서 클래스를 참조하면 순환참조가 생겨 가비지 컬렉터가 인스턴스를 회수할 수 없다.**
+  - 정적이 아닌 중첩 클래스는 자동으로 바깥 객체의 참조를 갖기 때문에 정적 중첩 클래스로 정의한다.
+    ㅎ
